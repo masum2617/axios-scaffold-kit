@@ -1,0 +1,24 @@
+{
+  "name": "axios-scaffold-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generate an editable Axios API structure for JavaScript and TypeScript projects.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "axios",
+    "scaffold",
+    "cli",
+    "api",
+    "javascript",
+    "typescript"
+  ],
+  "files": [
+    "bin/",
+    "src/",
+    "templates/"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
