@@ -4,6 +4,15 @@
   "private": true,
   "description": "Generate an editable Axios API structure for JavaScript and TypeScript projects.",
   "type": "module",
+  "bin": {
+    "axios-scaffold-kit": "bin/axios-scaffold-kit.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
   "license": "MIT",
   "keywords": [
     "axios",

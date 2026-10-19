@@ -8,3 +8,7 @@ dist/
 .env.*
 !.env.example
 .npmrc
+
+# Local agent instructions; distribute separately from the public repository.
+/AGENTS.md
+/.agent-guides/

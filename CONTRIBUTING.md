@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve axios-scaffold-kit. The project is currently being initialized; the CLI and templates are not implemented yet.
+Thank you for helping improve axios-scaffold-kit. The current development milestone implements local JavaScript generation. TypeScript output, automatic Axios installation, and optional authentication are planned.
 
 ## Proposing a change
 
@@ -17,7 +17,7 @@ Discuss larger changes in an issue before implementing them. The project's scope
 
 Both language templates should behave consistently. Changes to authentication, file generation, or dependency installation should include appropriate behavioral verification once those features exist.
 
-No build or test commands are available at this stage. Do not claim unperformed checks as passing.
+Run `npm test` before submitting code changes. The tests use Node's built-in test runner and temporary target projects. There are no build or lint commands yet. Do not claim unperformed checks as passing; generation tests do not prove HTTP requests work.
 
 The maintainer reviews contributions and controls merges and official npm releases. Contributions do not require direct repository or publishing access.
 
