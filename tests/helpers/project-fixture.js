@@ -56,7 +56,7 @@ export async function createProject(t, manifest = '{"name":"test-app","type":"mo
   return realpath(directory);
 }
 
-export function runCli(directory, args = ["init"], environment = {}) {
+export function runCli(directory, args = ["init", "-y"], environment = {}) {
   const bin = join(directory, "..", "bin");
   return spawnSync(CLI_NODE_BINARY, [CLI_PATH, ...args], {
     cwd: directory,

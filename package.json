@@ -2,7 +2,7 @@
   "name": "axios-scaffold-kit",
   "version": "0.1.0",
   "private": true,
-  "description": "Generate an editable Axios API structure for JavaScript and TypeScript projects.",
+  "description": "Generate an editable JavaScript Axios API starter with consent-controlled dependency installation.",
   "type": "module",
   "bin": {
     "axios-scaffold-kit": "bin/axios-scaffold-kit.js"
@@ -14,18 +14,26 @@
     "test": "node --test"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masum2617/axios-scaffold-kit.git"
+  },
+  "homepage": "https://github.com/masum2617/axios-scaffold-kit#readme",
+  "bugs": {
+    "url": "https://github.com/masum2617/axios-scaffold-kit/issues"
+  },
   "keywords": [
     "axios",
     "scaffold",
     "cli",
     "api",
-    "javascript",
-    "typescript"
+    "javascript"
   ],
   "files": [
     "bin/",
     "src/",
-    "templates/"
+    "templates/",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"

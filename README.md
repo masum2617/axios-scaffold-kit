@@ -2,7 +2,7 @@
 
 Generate an editable Axios API starter for your project.
 
-> **Development milestone:** local JavaScript generation and automatic Axios installation work. This package has not been published to npm. TypeScript output, interactive choices, and optional authentication are planned.
+> **Unpublished `0.1.0` candidate:** JavaScript generation and consent-controlled Axios installation work locally. TypeScript, authentication helpers, and output-directory selection are future features. Publication and the GitHub Release are separate, pending steps.
 
 ## Why this project?
 
@@ -31,6 +31,26 @@ node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js --help
 node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init
 ```
 
+When Axios is missing, the command asks before installing:
+
+```text
+Axios was not found in package.json.
+Installing it may update package.json, the lockfile, and node_modules.
+Install Axios? (y/N)
+```
+
+Enter `y` or `yes` to continue. Enter `n`, `no`, or press Enter to cancel without generating starter files or running npm. Other answers repeat the question. Closing input cancels; Ctrl+C cancels with exit status 130.
+
+For scripts, authorize installation explicitly:
+
+```sh
+node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init -y
+# Equivalent:
+node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init --yes
+```
+
+Missing Axios without an interactive terminal requires one of these flags. Neither flag bypasses project validation or output conflict checks. Existing Axios declarations skip both prompting and installation, including in scripts.
+
 The command uses your **current directory** as the target project. It creates:
 
 ```text
@@ -43,13 +63,13 @@ If either file exists, the command stops before running npm or writing either fi
 
 When Axios is already declared in `dependencies`, `devDependencies`, or `optionalDependencies`, its version and location are preserved and npm is not run. Detection uses the manifest, not `node_modules`; a declaration does not prove dependencies have been downloaded. If needed, use your project's normal dependency-installation workflow.
 
-When missing, Axios is installed as a production dependency with `npm install axios@^1.20.0 --save-prod`. The range is maintained in `src/config/defaults.js`. npm may modify `package.json`, lockfiles, and installed dependencies, and follows the project's normal npm configuration and lifecycle behavior. The generator does not attempt to roll back npm changes.
+After consent, missing Axios is installed as a production dependency with `npm install axios@^1.20.0 --save-prod`. The range is maintained in `src/config/defaults.js`. npm may modify `package.json`, lockfiles, and installed dependencies, and follows the project's normal npm configuration and lifecycle behavior. Existing node_modules directories are used by npm, not deleted wholesale by this generator. Consent does not guarantee an unchanged dependency tree. The generator does not attempt to roll back npm changes.
 
 If npm fails or is terminated, starter files are not generated. If npm succeeds but file writing later fails, the error explicitly reports that installation succeeded and describes any completed file writes. Partial output is not automatically rolled back.
 
 A peer-only Axios declaration stops the command with instructions to install it explicitly. Automatic installation is also refused when the target or an ancestor identifies Yarn/pnpm through `packageManager` or lock/workspace files, or declares npm workspaces. Install Axios with the intended package manager first; generation can then proceed without invoking npm once a direct declaration exists. Workspace-aware installation and other package managers are not implemented yet.
 
-No arguments displays help. Unknown commands or extra arguments fail with a nonzero exit status. This milestone has no language prompts, custom output option, or authentication setup.
+No arguments or `--help` displays help. Supported setup forms are `init`, `init -y`, and `init --yes`. Unknown commands, duplicate flags, or extra arguments fail with a nonzero exit status. Output is JavaScript in `src/api`; there is no language/output selection or authentication setup in this release.
 
 **After generation:**
 
@@ -116,7 +136,7 @@ tests/install/              Tests dependency handling and installation failures
 tests/helpers/              Provides isolated projects and an offline fake npm
 ```
 
-The npm `bin` entry maps the command name to the executable. The executable delegates to the CLI, which reads and validates the project once, prepares output, preserves or installs Axios, and writes the starter. Template locations are resolved relative to the generator itself, so execution does not depend on being inside this repository.
+The npm `bin` entry maps the command name to the executable. The executable delegates to the CLI, which reads and validates the project once, prepares output, preserves Axios or requests consent to install it, and writes the starter after dependency handling succeeds. Template locations are resolved relative to the generator itself, so execution does not depend on being inside this repository.
 
 The timeout is inserted from `src/config/defaults.js`. Exclusive file creation prevents overwriting files that appear between preflight checks and writing.
 
@@ -129,7 +149,7 @@ npm test
 npm pack --dry-run
 ```
 
-Tests use Node's built-in test runner and disposable projects. They cover generation, output syntax, manifest validation, conflict protection before npm runs, preserved declarations and lockfiles, package-manager/workspace boundaries, help, invalid arguments, and installation/file-writing failures. Routine tests put a fake npm executable on `PATH`; they do not download packages or contact live APIs. The installer's fixed Windows command is checked through a process seam; actual Windows execution has not been verified.
+Tests use Node's built-in test runner and disposable projects. They cover generation, output syntax, manifest validation, consent parsing/cancellation, noninteractive behavior, conflict protection before npm runs, preserved declarations and lockfiles, package-manager/workspace boundaries, help, invalid arguments, and installation/file-writing failures. Routine tests put a fake npm executable on `PATH`; they do not download packages or contact live APIs. The installer's fixed Windows command is checked through a process seam; actual Windows execution has not been verified locally.
 
 By default, CLI subprocesses and generated-file syntax checks use the same Node binary as the test runner. To check an older CLI runtime, keep Node 22 or later active for `npm test` and supply the absolute path to the other binary:
 
@@ -139,7 +159,7 @@ CLI_NODE_BINARY="/absolute/path/to/node16/bin/node" npm test
 
 `CLI_NODE_BINARY` is a test-only setting. It does not switch your default runtime or change the generated code. Node 22 runs the testing tools, while those tools launch the CLI and syntax checks using the selected binary.
 
-The 38-test behavioral suite has been verified with a Node 22.23.1 test runner and these CLI runtimes on macOS ARM64:
+The behavioral suite has been verified with a Node 22.23.1 test runner and these CLI runtimes on macOS ARM64:
 
 | CLI runtime | Behavioral suite |
 | --- | --- |
@@ -151,23 +171,32 @@ The 38-test behavioral suite has been verified with a Node 22.23.1 test runner a
 
 The declared range is `>=16`; the table records the versions actually checked, not every release in that range. Separate smoke checks used the packed archive to install Axios 1.20.0 in disposable projects on Node 16.0.0/npm 7.10.0 and Node 16.20.2/npm 8.19.4, with strict dependency-engine checking enabled. Both runtimes successfully executed all six generated example methods against a local HTTP server, including parameter/body/configuration forwarding and preservation of the full client response. Regeneration with an existing dependency also preserved the manifest and lockfile without npm on `PATH`. These checks do not establish compatibility of future Axios releases or transitive dependencies.
 
-Package archive extraction and CLI execution outside the checkout are verified separately during milestone validation. No lint or build commands are configured yet. Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md).
+Real-terminal checks on Node 16.0.0 also cover yes, no, EOF, and Ctrl+C, with fake npm for consent testing. Packaging checks are separate from the offline suite. No lint or build commands are configured. Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Planned first-release capabilities
+The current candidate's actual npm executable mapping was also checked offline from a packed archive: npm exec with Node 16.20.2/npm 8.19.4 and Node 22.23.1/npm 10.9.8, and an npm-installed bin launcher with Node 16.0.0/npm 7.10.0. Both consent flags, existing-dependency preservation, help, and refusal without inner consent passed. npm 7.10.0 failed the direct local-tarball npm exec path before starting our CLI; the release guide records its fallback. The published-registry npx command still requires verification after publication.
 
-- Choose JavaScript or TypeScript and an output directory.
-- Optional authentication that is inactive until configured, with in-memory token storage, public-request opt-out, and bounded refresh handling.
-- Tested installation and usage instructions for a published npm CLI.
+## First-release scope and future work
 
-The intended published command is `npx axios-scaffold-kit@latest init`. It is **not available from this project on npm yet**; use the local executable above.
+`0.1.0` is a JavaScript-only starter with fixed `src/api` output, preserved Axios declarations, consent-controlled installation, conflict protection, and Node 16+ CLI support. It uses ES modules; it is not a CommonJS template or a framework-specific integration.
+
+TypeScript is targeted for a future `0.2.0`. Authentication helpers, output selection, and workspace-aware installation are separate future features. They are not required to use this release.
+
+Once published, the intended commands are:
+
+```sh
+npx axios-scaffold-kit@0.1.0 init
+npx axios-scaffold-kit@0.1.0 init -y
+```
+
+These registry commands are **not available from this project yet**. Use the local executable until publication is confirmed. npm may first ask to download the generator; our separate installation question concerns Axios in your application.
 
 ## Updates and release status
 
 New generator releases affect future output. They do not automatically change files already generated in your application. Apply relevant template fixes manually using future release notes; maintain Axios through your application's dependency workflow.
 
-The development version is `0.1.0`. `private: true` prevents publishing this unfinished package; it does not make this GitHub repository private. Release preparation will include tested language templates and authentication, continued installation verification, refreshed usage documentation, package archive checks, release notes, npm two-factor authentication, and an explicit publishing decision.
+The candidate version is `0.1.0`. `private: true` deliberately blocks publication until the final release decision; it does not make this GitHub repository private. See [CHANGELOG.md](CHANGELOG.md) for draft changes and [the maintainer release guide](docs/RELEASING.md) for the reviewed npm/tag/GitHub Release process. No release is claimed by the existence of these files.
 
-No automatic publishing workflow is configured.
+The read-only [CI workflow](.github/workflows/ci.yml) is configured to run tests on Node 22 across Linux, macOS, and Windows, and CLI checks on the declared minimum Node major's first and latest patch releases on Linux. Remote CI results are only established after those jobs run; local verification above does not establish all configured platforms. No automatic publishing or release-creation workflow is configured.
 
 ## License
 

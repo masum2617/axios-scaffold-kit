@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node 22 tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-14, windows-2022]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      # The generator has no dependencies: npm ci would require a nonexistent lockfile.
+      - run: npm test
+      - run: npm pack --dry-run --ignore-scripts
+
+  compatibility:
+    name: CLI compatibility (${{ matrix.release }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        release: [minimum, latest-patch]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Derive CLI runtime from package compatibility policy
+        id: runtime
+        env:
+          RELEASE_LINE: ${{ matrix.release }}
+        run: |
+          node --input-type=module <<'JS'
+          import { readFileSync, appendFileSync } from "node:fs";
+          const { engines } = JSON.parse(readFileSync("package.json", "utf8"));
+          const match = /^>=([0-9]+)$/.exec(engines.node);
+          if (!match) throw new Error("Update CI version derivation for the new engines.node policy.");
+          const major = match[1];
+          const version = process.env.RELEASE_LINE === "minimum" ? `${major}.0.0` : `${major}.x`;
+          appendFileSync(process.env.GITHUB_OUTPUT, `version=${version}\n`);
+          JS
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ steps.runtime.outputs.version }}
+          package-manager-cache: false
+      - name: Save CLI executable path
+        id: cli
+        run: node -e 'require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, `binary=${process.execPath}\n`)'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Run modern test tools against the selected CLI runtime
+        env:
+          CLI_NODE_BINARY: ${{ steps.cli.outputs.binary }}
+        run: npm test

@@ -74,7 +74,7 @@ for (const filename of ["apiClient.js", "exampleApi.js"]) {
 
 test("reports npm failure and preserves npm's partial changes without generating", async (t) => {
   const directory = await createProject(t);
-  const result = runCli(directory, ["init"], { FAKE_NPM_MODE: "fail" });
+  const result = runCli(directory, ["init", "-y"], { FAKE_NPM_MODE: "fail" });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /exit code 7/);
   assert.match(result.stderr, /No starter files were generated/);
@@ -86,7 +86,7 @@ test("reports npm failure and preserves npm's partial changes without generating
 
 test("reports termination without generating files", { skip: process.platform === "win32" }, async (t) => {
   const directory = await createProject(t);
-  const result = runCli(directory, ["init"], { FAKE_NPM_MODE: "signal" });
+  const result = runCli(directory, ["init", "-y"], { FAKE_NPM_MODE: "signal" });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /terminated by SIGTERM/);
   assert.deepEqual(await readdir(directory), ["package.json"]);
@@ -94,7 +94,7 @@ test("reports termination without generating files", { skip: process.platform ==
 
 test("reports unavailable npm without generating files", async (t) => {
   const directory = await createProject(t);
-  const result = runCli(directory, ["init"], { PATH: "" });
+  const result = runCli(directory, ["init", "-y"], { PATH: "" });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Could not start npm|npm installation failed/);
   assert.doesNotMatch(result.stdout, /Created/);
@@ -103,7 +103,7 @@ test("reports unavailable npm without generating files", async (t) => {
 
 test("distinguishes successful installation from partial generation failure", async (t) => {
   const directory = await createProject(t);
-  const result = runCli(directory, ["init"], { FAKE_NPM_MODE: "generation-failure" });
+  const result = runCli(directory, ["init", "-y"], { FAKE_NPM_MODE: "generation-failure" });
   assert.equal(result.status, 1);
   assert.match(result.stdout, /Axios installed successfully/);
   assert.match(result.stderr, /Axios was installed, but starter generation failed/);
