@@ -1,31 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile, symlink } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, readdir, writeFile, symlink } from "node:fs/promises";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { DEFAULT_OUTPUT_DIRECTORY, DEFAULT_TIMEOUT_MS } from "../../src/config/defaults.js";
-
-const CLI_PATH = fileURLToPath(new URL("../../bin/axios-scaffold-kit.js", import.meta.url));
-
-async function createProject(t, manifest = '{"name":"test-app","type":"module"}\n') {
-  const directory = await mkdtemp(join(tmpdir(), "axios-scaffold-kit-test-"));
-  t.after(() => rm(directory, { recursive: true, force: true }));
-
-  if (manifest !== undefined && manifest !== null) {
-    await writeFile(join(directory, "package.json"), manifest);
-  }
-
-  return directory;
-}
-
-function runCli(directory, args = ["init"]) {
-  return spawnSync(process.execPath, [CLI_PATH, ...args], {
-    cwd: directory,
-    encoding: "utf8",
-  });
-}
+import { CLI_NODE_BINARY, createProject, runCli } from "../helpers/project-fixture.js";
 
 test("generates executable JavaScript syntax and preserves project data", async (t) => {
   const manifest = '{"name":"existing-app","dependencies":{"axios":"^1.0.0"},"type":"module"}\n';
@@ -35,8 +14,8 @@ test("generates executable JavaScript syntax and preserves project data", async 
   const result = runCli(directory);
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Created src[\\/]api[\\/]apiClient\.js/);
-  assert.match(result.stdout, /npm install axios/);
-  assert.match(result.stdout, /Axios was not installed/);
+  assert.match(result.stdout, /Axios already declared; preserving it/);
+  assert.doesNotMatch(result.stdout, /Installing Axios/);
   assert.equal(await readFile(join(directory, "package.json"), "utf8"), manifest);
   assert.equal(await readFile(join(directory, "notes.txt"), "utf8"), "keep this");
   assert.deepEqual((await readdir(directory)).sort(), ["notes.txt", "package.json", "src"]);
@@ -48,7 +27,7 @@ test("generates executable JavaScript syntax and preserves project data", async 
   assert.ok(!client.includes("__DEFAULT_TIMEOUT_MS__"));
 
   for (const filename of ["apiClient.js", "exampleApi.js"]) {
-    const syntax = spawnSync(process.execPath, ["--check", join(output, filename)], {
+    const syntax = spawnSync(CLI_NODE_BINARY, ["--check", join(output, filename)], {
       encoding: "utf8",
     });
     assert.equal(syntax.status, 0, syntax.stderr);

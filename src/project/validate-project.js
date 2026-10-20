@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-/** Require a readable JSON object manifest without changing the target project. */
+/** Read and validate the target manifest without changing the project. */
 export async function validateProject(projectDirectory) {
   const manifestPath = join(projectDirectory, "package.json");
   let manifestText;
@@ -28,4 +28,6 @@ export async function validateProject(projectDirectory) {
   if (manifest === null || typeof manifest !== "object" || Array.isArray(manifest)) {
     throw new Error(`${manifestPath} must contain a JSON object.`);
   }
+
+  return manifest;
 }

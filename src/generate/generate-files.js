@@ -8,8 +8,8 @@ import {
 const TEMPLATE_DIRECTORY = new URL("../../templates/javascript/", import.meta.url);
 const TEMPLATE_FILES = ["apiClient.js", "exampleApi.js"];
 
-/** Copy the starter into a validated project, preserving existing destination files. */
-export async function generateFiles(projectDirectory) {
+/** Prepare templates and check conflicts before dependency installation can change the project. */
+export async function prepareFiles(projectDirectory) {
   const outputDirectory = join(projectDirectory, DEFAULT_OUTPUT_DIRECTORY);
   const preparedFiles = [];
 
@@ -42,12 +42,17 @@ export async function generateFiles(projectDirectory) {
     preparedFiles.push({ destination, content });
   }
 
+  return { outputDirectory, files: preparedFiles };
+}
+
+/** Write prepared files without overwrites; report rather than hide partial failures. */
+export async function writeFiles({ outputDirectory, files }) {
   const createdFiles = [];
 
   try {
     await mkdir(outputDirectory, { recursive: true });
 
-    for (const { destination, content } of preparedFiles) {
+    for (const { destination, content } of files) {
       // Exclusive creation also prevents overwrites if a file appears after preflight.
       await writeFile(destination, content, { flag: "wx" });
       createdFiles.push(destination);

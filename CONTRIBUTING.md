@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve axios-scaffold-kit. The current development milestone implements local JavaScript generation. TypeScript output, automatic Axios installation, and optional authentication are planned.
+Thank you for helping improve axios-scaffold-kit. The current development milestone implements local JavaScript generation and automatic Axios installation for standalone npm projects. TypeScript output and optional authentication are planned.
 
 ## Proposing a change
 
@@ -17,7 +17,7 @@ Discuss larger changes in an issue before implementing them. The project's scope
 
 Both language templates should behave consistently. Changes to authentication, file generation, or dependency installation should include appropriate behavioral verification once those features exist.
 
-Run `npm test` before submitting code changes. The tests use Node's built-in test runner and temporary target projects. There are no build or lint commands yet. Do not claim unperformed checks as passing; generation tests do not prove HTTP requests work.
+Run `npm test` with Node.js 22 or later before submitting code changes. The generator itself supports Node.js 16 or later. The tests use Node's built-in test runner, temporary target projects, and fake npm execution to stay offline; set `CLI_NODE_BINARY` to an absolute Node binary path to check the CLI on another runtime while keeping the test runner on Node 22 or later. Real installation and HTTP smoke checks belong in disposable projects, separately from routine tests. See the README's development instructions for the verified runtime matrix. There are no build or lint commands yet. Do not claim unperformed checks as passing; generation tests alone do not prove HTTP requests work.
 
 The maintainer reviews contributions and controls merges and official npm releases. Contributions do not require direct repository or publishing access.
 
