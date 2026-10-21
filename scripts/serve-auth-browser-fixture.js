@@ -13,7 +13,7 @@ const authTemplate = new URL("../templates/javascript/auth/attachAuthInterceptor
 const configTemplate = new URL("../templates/javascript/auth/authConfig.js", import.meta.url);
 const clientTemplate = new URL("../templates/javascript/apiClient.js", import.meta.url);
 const guide = await readFile(new URL("../docs/AUTHENTICATION.md", import.meta.url), "utf8");
-const refreshRecipe = guide.split("<!-- recipe:refresh -->")[1].match(/```js\n([\s\S]*?)```/)[1];
+const refreshRecipe = guide.split("<!-- recipe:refresh -->")[1].match(/```js\r?\n([\s\S]*?)```/)[1];
 const html = `<!doctype html><meta charset="utf-8"><title>Authentication browser fixture</title>
 <pre id="result">Running…</pre>
 <script src="/axios.js"></script>

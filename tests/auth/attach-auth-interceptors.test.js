@@ -88,8 +88,12 @@ test("generated authentication with real Axios", {
   for (const recipe of ["bearer", "refresh", "csrf"]) {
     await t.test(`the documented ${recipe} configuration works through automatic client wiring`, async () => {
       const guide = await readFile(new URL("../../docs/AUTHENTICATION.md", import.meta.url), "utf8");
-      const source = guide.split(`<!-- recipe:${recipe} -->`)[1]?.match(/```js\n([\s\S]*?)```/)?.[1];
-      assert.ok(source, `Missing copyable ${recipe} recipe`);
+      // Exercise both checkout formats on every operating system.
+      const sources = [guide.replace(/\r\n/g, "\n"), guide.replace(/\r?\n/g, "\r\n")]
+        .map((text) => text.split(`<!-- recipe:${recipe} -->`)[1]?.match(/```js\r?\n([\s\S]*?)```/)?.[1]);
+      for (const source of sources) assert.ok(source, `Missing copyable ${recipe} recipe`);
+      assert.equal(sources[0], sources[1].replace(/\r\n/g, "\n"));
+      const source = sources[1];
       const root = await mkdtemp(join(tmpdir(), "axios-scaffold-recipe-"));
       t.after(() => rm(root, { recursive: true, force: true }));
       await writeFile(join(root, "package.json"), '{"type":"module"}');
