@@ -1,12 +1,12 @@
 # Changelog
 
-User-visible changes are recorded here. Released entries use the npm version, a matching `v`-prefixed Git tag, and the actual publication date. Draft entries are not release announcements.
+User-visible changes are recorded here. Released entries use the npm version, a matching `v`-prefixed Git tag, and the actual publication date. Prepared entries are not release announcements; publication dates are added after the corresponding release action succeeds.
 
 ## Unreleased
 
 Future changes will be collected here before a release is prepared. TypeScript support is targeted for a later `0.2.0`; output-directory selection remains future work.
 
-## 0.1.0 — draft, not published
+## 0.1.0 — prepared; publication pending
 
 ### Added
 
@@ -26,6 +26,10 @@ Future changes will be collected here before a release is prepared. TypeScript s
 
 - Renamed the unpublished interceptor file/export from `configureAuth.js` / `configureAuth` to `attachAuthInterceptors.js` / `attachAuthInterceptors` to distinguish it from editable `authConfig.js`. Added comments explaining each function; authentication behavior is unchanged. Earlier local copies require manual import/export updates.
 
+### Fixed
+
+- Documentation recipe extraction accepts both LF and Windows CRLF line endings in authentication tests and the browser fixture.
+
 ### Limitations
 
 - JavaScript ES modules only; fixed output location.
@@ -37,6 +41,6 @@ Future changes will be collected here before a release is prepared. TypeScript s
 
 ### Existing users
 
-This is the initial-release draft. Future generator updates will not rewrite files already generated in an application. Relevant fixes will include manual update guidance.
+This is the initial release; publication is pending. Future generator updates will not rewrite files already generated in an application. Relevant fixes will include manual update guidance.
 
-Before adopting this candidate from earlier local output, compare the four templates. Manually add `auth/authConfig.js` and update the shared client wiring; retain `auth/attachAuthInterceptors.js` or add it if missing. The CLI refuses to overwrite existing starter files; enabling authentication is explicit.
+Before adopting this version from earlier local output, compare the four templates. Manually add `auth/authConfig.js` and update the shared client wiring; retain `auth/attachAuthInterceptors.js` or add it if missing. The CLI refuses to overwrite existing starter files; enabling authentication is explicit.

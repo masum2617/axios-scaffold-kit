@@ -2,7 +2,7 @@
 
 Generate an editable JavaScript Axios API starter in an existing project, with optional bearer authentication, token refresh, and CSRF hooks.
 
-> **Release status:** `0.1.0` is an unpublished candidate. The npm commands below become available after publication. For now, use [the local executable](#try-the-local-executable). Authentication is disabled by default.
+> **Release status:** `0.1.0` is prepared for release; GitHub tagging and npm publication are pending. The npm commands below become available after publication. Until then, use [the local executable](#try-the-local-executable). Authentication is disabled by default.
 
 The generator copies source files into your application. You own and edit those files; your application imports local code and Axios, not a runtime library from axios-scaffold-kit. This independent project is not affiliated with or endorsed by Axios.
 
@@ -301,7 +301,7 @@ Generated files are application-owned: new generator versions do not update them
 
 `0.1.0` includes JavaScript ES modules, fixed src/api output, optional authentication hooks, and standalone npm installation. TypeScript is targeted for 0.2.0. Output customization, workspace-aware installation, proactive refresh, and cross-tab coordination remain future work.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [CHANGELOG.md](CHANGELOG.md) for draft changes, and [docs/RELEASING.md](docs/RELEASING.md) for the manual GitHub/npm release process. The [draft release notes](docs/releases/0.1.0.md) are not a publication announcement. `private: true` blocks npm publication until final authorization; it does not make the repository private.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [CHANGELOG.md](CHANGELOG.md) for version history, and [docs/RELEASING.md](docs/RELEASING.md) for the manual GitHub/npm release process. The [release notes](docs/releases/0.1.0.md) describe the initial version and its publication status. The package publication block has been removed for release preparation; publishing remains a separate, explicit maintainer action.
 
 ## License
 

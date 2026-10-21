@@ -1,6 +1,6 @@
 # Maintainer release guide
 
-This is the manual first-release walkthrough for axios-scaffold-kit. Preparation is not publication: commits, pushes, tags, account changes, removing the npm publication block, GitHub Release creation, and npm publication require the maintainer's explicit authorization. The current candidate keeps `private: true`.
+This is the manual first-release walkthrough for axios-scaffold-kit. Preparation is not publication: commits, pushes, tags, account changes, removing the npm publication block, GitHub Release creation, and npm publication require the maintainer's explicit authorization. The `0.1.0` manifest no longer has `private: true`: the maintainer removed that block during release preparation. This does not publish the package or authorize publication.
 
 ## What GitHub and npm each do
 
@@ -68,7 +68,7 @@ node scripts/serve-auth-browser-fixture.js
 
 Open its localhost URL, require PASS, then stop the server with Ctrl+C. Review default disabled behavior, automatic configuration, the documented recipes, public requests, refresh/cancellation, CSRF, fixed-origin filtering, and cleanup. Local browser proof does not establish all browsers/platforms.
 
-Review README, authentication examples, CHANGELOG, [draft release notes](releases/0.1.0.md), package metadata, executable shebang/mode, and the package files allowlist. Preserve unrelated work. Keep private local agent/learning documents ignored and absent from the npm archive. Inspect git's staged changes before any commit; do not force-add ignored files.
+Review README, authentication examples, CHANGELOG, [release notes](releases/0.1.0.md), package metadata, executable shebang/mode, and the package files allowlist. Preserve unrelated work. Keep private local agent/learning documents ignored and absent from the npm archive. Inspect git's staged changes before any commit; do not force-add ignored files.
 
 ## Step 3 — Finalize and push the release commit, after authorization
 
@@ -77,8 +77,8 @@ The first release stays **0.1.0**. It includes JavaScript, fixed src/api output,
 Only after the release candidate is approved:
 
 1. Remove the README's unpublished-candidate notice or replace it with accurate release-status links. Keep any GitHub-first npm-pending status in the release announcement until verification succeeds.
-2. Finalize the changelog entry/date for the source release; it must not imply that npm publication already succeeded. Finalize the draft notes with actual CI/verification evidence.
-3. Remove the publication block deliberately:
+2. Finalize the changelog entry for the source release; leave its status as prepared/publication pending until the release action succeeds. Record the actual source release date when creating the GitHub Release, and record npm status separately. Use actual CI/verification evidence in the release notes.
+3. Check the manifest publication block. It is already removed for `0.1.0`; do not change it again. For a future unpublished package that still has the block, remove it only after authorization:
 
    ```sh
    npm pkg delete private
@@ -152,7 +152,7 @@ Confirm HEAD is still the recorded release commit before running that command. D
 1. Open **Releases → Draft a new release**.
 2. Select the existing **v0.1.0** tag; verify its target commit.
 3. Title it **v0.1.0 — Initial JavaScript release**.
-4. Paste the reviewed contents of docs/releases/0.1.0.md, replacing drafting instructions with the real status/evidence.
+4. Paste the reviewed contents of docs/releases/0.1.0.md, updating its prepared status to the actual source-release status and recording the final commit/check evidence.
 5. Because npm follows next, clearly state **Source release available; npm publication pending**. Do not claim npm commands have been verified yet.
 6. A 0.x version is not automatically a prerelease; do not select prerelease solely because it starts with zero.
 7. Publish the GitHub Release only when authorized. If you prefer to wait until npm succeeds, **Save draft** instead; finalize it afterward.
