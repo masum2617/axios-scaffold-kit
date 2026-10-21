@@ -1,150 +1,197 @@
 # Maintainer release guide
 
-This project uses manual, reviewed releases. This document describes the process; it does not authorize commits, pushes, tags, account changes, GitHub Release creation, or npm publication. The package is currently blocked from publication with `private: true`.
+This is the manual first-release walkthrough for axios-scaffold-kit. Preparation is not publication: commits, pushes, tags, account changes, removing the npm publication block, GitHub Release creation, and npm publication require the maintainer's explicit authorization. The current candidate keeps `private: true`.
 
-## Understand the three release records
+## What GitHub and npm each do
 
-| Record | First release | Meaning |
+| Item | First-release value | Purpose |
 | --- | --- | --- |
-| npm package version | `0.1.0` | Installable generator distributed through npm. |
-| Git tag | `v0.1.0` | Exact repository commit used for the release. |
-| GitHub Release | `v0.1.0 — Initial JavaScript release` | Human-readable announcement and notes attached to the tag. |
+| GitHub repository | masum2617/axios-scaffold-kit | Source, issues, pull requests, CI, and documentation. |
+| Git tag | v0.1.0 | Names the exact reviewed release commit. |
+| GitHub Release | v0.1.0 — Initial JavaScript release | Release-list entry with notes and automatic source archives. |
+| npm package | axios-scaffold-kit@0.1.0 | Installable generator used by npx/npm. |
 
-Keep all three aligned. Never move a published version's tag to a different commit. Publish a new version for a fix rather than replacing an existing release's code.
+A GitHub Release does **not** publish to npm. This guide follows the requested GitHub-first order. If GitHub is public before npm, mark its notes **Source release available; npm publication pending** until npm checks succeed. Do not announce working registry commands before then.
 
-## 1. Choose the version and scope
+Keep tag, package version, notes, and source commit aligned. A published version/tag is not a place to replace code silently; fix it with another version.
 
-- First public release: `0.1.0`, JavaScript only with the documented fixed output directory and installation consent.
-- Backward-compatible bug fixes: patch releases such as `0.1.1`.
-- New capabilities before stable `1.0.0`: minor releases; TypeScript is targeted for `0.2.0`.
-- While using `0.x`, explicitly call out incompatible changes and migration actions; there is no stable-interface promise merely because the code is public.
-- After `1.0.0`, follow semantic versioning: patch for compatible fixes, minor for compatible features, major for incompatible interface changes.
+## Step 1 — Check the accounts and package name
 
-Refer to the [Semantic Versioning specification](https://semver.org/). A `0.x` version is not automatically an npm prerelease; labels such as `-beta.1` are separate choices. Do not check GitHub's prerelease box solely because the version starts with zero.
+Use an npm account you control with two-factor authentication configured for the manual release. Do this yourself in the browser; never put credentials or recovery codes in the repository or chat. Consult the current [npm publishing requirements](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/) and [2FA guidance](https://docs.npmjs.com/requiring-2fa-for-package-publishing-and-settings-modification/).
 
-## 2. Prepare the candidate
-
-1. Review the intended source changes, supported platforms, public commands, and generated exports. Preserve unrelated work.
-2. Update README usage and limitations. Remove promises for features not included in this release.
-3. Move included changes from Unreleased into the intended version's changelog entry. Replace the draft label with the actual date only during the final publication preparation; do not claim it has shipped early.
-4. For template changes, explain what existing applications must change manually. Installing a newer generator never automatically migrates their files.
-5. Review package metadata, executable mode/shebang, dependencies, engine range, and the files allowlist.
-
-For the first release, keep `0.1.0`; do not bump it simply to remove the draft status. For later releases, an authorized `npm version patch --no-git-tag-version` or `npm version minor --no-git-tag-version` updates metadata without creating a tag. Inspect its effects, including a lockfile if one exists. Version changes still need review.
-
-## 3. Verify before release
-
-Use Node.js 22 or later for contributor tools:
+From the generator repository, using Node 22+ for release/contributor tools:
 
 ```sh
+node --version
+npm --version
+npm view axios-scaffold-kit name version --registry=https://registry.npmjs.org
+```
+
+A genuine registry E404 indicates the name is not currently registered; it does not reserve it or guarantee npm will accept publication. A network/authentication failure is not an availability check. If a package exists, confirm that your account owns it before continuing. Resolve name conflicts before tagging anything.
+
+Log in when you are ready to publish:
+
+```sh
+npm login --registry=https://registry.npmjs.org
+npm whoami --registry=https://registry.npmjs.org
+```
+
+Follow npm's interactive browser/2FA prompts yourself. No automation token or GitHub secret is required for this manual process. Public unscoped publication does not require a paid private-package subscription.
+
+## Step 2 — Verify the candidate locally
+
+Run commands from the **generator repository**, not the application used to test its output:
+
+```sh
+cd /path/to/axios-scaffold-kit
+git status --short --branch
+node scripts/prepare-auth-fixture.js
+```
+
+Copy the temporary fixture path printed by the preparation script:
+
+```sh
+export AXIOS_TEST_DIRECTORY="/absolute/path/printed/by/the/script"
 npm test
 npm pack --dry-run --ignore-scripts
 ```
 
-Require the GitHub CI jobs to pass on the release commit. CI checks Node 22 tests on Linux/macOS/Windows and the CLI's minimum/runtime-patch line on Linux. A workflow file existing locally is not proof those jobs passed.
+The complete candidate currently has 84 checks. A passing base suite with authentication skipped is not a full release check. Preparation installs Axios only in a disposable project; tests use controlled adapters/local HTTP rather than a live backend.
 
-Use `CLI_NODE_BINARY` to repeat local compatibility checks against another Node executable. Check the declared minimum, not only a recent patch release.
+Keep the runner on Node 22+ and use CLI_NODE_BINARY for the minimum consumer runtime when available. Verify the declared Node 16.0.0 minimum, not only the latest patch. Record exact Node/Axios versions and platforms.
 
-Create a package archive for verification:
+For browser verification:
 
 ```sh
-npm pack --ignore-scripts
+node scripts/serve-auth-browser-fixture.js
 ```
 
-Inspect the archive and its manifest. Required executable/source/templates, README, license, and changelog must be included. No credentials, local instructions, learning notes, or unrelated files may be present. `npm pack` checks packaging; it does not publish.
+Open its localhost URL, require PASS, then stop the server with Ctrl+C. Review default disabled behavior, automatic configuration, the documented recipes, public requests, refresh/cancellation, CSRF, fixed-origin filtering, and cleanup. Local browser proof does not establish all browsers/platforms.
 
-From a separate disposable npm project, test the archive through npm's command mapping. Replace the path with the actual archive:
+Review README, authentication examples, CHANGELOG, [draft release notes](releases/0.1.0.md), package metadata, executable shebang/mode, and the package files allowlist. Preserve unrelated work. Keep private local agent/learning documents ignored and absent from the npm archive. Inspect git's staged changes before any commit; do not force-add ignored files.
+
+## Step 3 — Finalize and push the release commit, after authorization
+
+The first release stays **0.1.0**. It includes JavaScript, fixed src/api output, installation consent, and optional bearer/refresh/CSRF hooks. TypeScript is not a release prerequisite.
+
+Only after the release candidate is approved:
+
+1. Remove the README's unpublished-candidate notice or replace it with accurate release-status links. Keep any GitHub-first npm-pending status in the release announcement until verification succeeds.
+2. Finalize the changelog entry/date for the source release; it must not imply that npm publication already succeeded. Finalize the draft notes with actual CI/verification evidence.
+3. Remove the publication block deliberately:
+
+   ```sh
+   npm pkg delete private
+   ```
+
+4. Review all intended files with git status/diff. Stage only reviewed release content. If every listed change belongs to the approved release, the following is one manual path:
+
+   ```sh
+   git add .
+   git diff --cached --stat
+   git diff --cached
+   git commit -m "Release v0.1.0"
+   git push origin main
+   ```
+
+   Do not execute these as part of ordinary documentation preparation. The current checkout may already be ahead of origin; inspect every commit being pushed. The ignored learning/agent files must remain untracked.
+
+5. Open the repository's Actions tab and wait for **all** CI jobs on that exact commit. Linux/macOS/Windows Node 22 jobs and Linux minimum/latest-patch CLI jobs must pass, including real Axios integration tests. Configuration existing locally is not proof of remote success.
+
+If CI fails, fix it, create a reviewed replacement release commit, and rerun checks **before** creating v0.1.0. Do not attach a release tag to a failing commit.
+
+## Step 4 — Build and verify the exact package
+
+After CI passes, confirm a clean tracked working tree and record the commit:
+
+```sh
+git status --short
+git rev-parse HEAD
+npm pack --ignore-scripts --json
+```
+
+Keep the printed archive (`axios-scaffold-kit-0.1.0.tgz`) and its integrity/shasum. Confirm its manifest is version 0.1.0 and no longer has private: true. The package includes CLI sources/templates, README, license, changelog, and the authentication guide. The local guides, learning notes, tests, release notes, and maintainer scripts are not package runtime files.
+
+Test npm's command mapping from a **fresh disposable target project** with a package.json:
 
 ```sh
 npm exec --yes --package=/absolute/path/axios-scaffold-kit-0.1.0.tgz -- axios-scaffold-kit --help
 npm exec --yes --package=/absolute/path/axios-scaffold-kit-0.1.0.tgz -- axios-scaffold-kit init -y
 ```
 
-The first `--yes` belongs to npm and permits fetching/running the CLI package. The final `-y` belongs to axios-scaffold-kit and authorizes Axios installation. They are different decisions. To test our interactive consent, omit the final `-y` and use a real terminal.
+The outer --yes belongs to npm's package download; the inner -y authorizes Axios installation. To check consent, omit inner -y in a real terminal. Use a different fresh target for each generation scenario; existing destinations must fail.
 
-The tarball `npm exec` path was verified with npm 8.19.4 and npm 10.9.8. npm 7.10.0 bundled with Node 16.0.0 failed this local-tarball path with `Cannot read property 'spec' of undefined` before our CLI started. That is not a successful command-execution check. For that minimum runtime, the npm-installed executable mapping was verified instead. Use a separate disposable tool-host directory, not the generator repository or a real application:
+Verify the four files, preserved dependency/lockfile paths, installation failure, cancellation/refusal, nested conflicts, and generated requests against a controlled local server. Never test generation in a real user application accidentally. Do not modify source after packing/tagging without rebuilding and re-verifying the candidate.
+
+### Old npm minimum-runtime fallback
+
+Local-tarball npm exec was verified with npm 8.19.4 and 10.9.8. npm 7.10.0 on Node 16.0.0 failed before starting the CLI with `Cannot read property 'spec' of undefined`. The alternative npm-installed executable mapping was verified:
 
 ```sh
-# POSIX example; replace these paths with new disposable directories and the actual archive.
+# Two separate disposable directories, each with its own package.json.
 cd /path/to/disposable-tool-host
-npm init -y
 npm install /absolute/path/axios-scaffold-kit-0.1.0.tgz --no-save --ignore-scripts --package-lock=false
 
 cd /path/to/disposable-target-project
 /path/to/disposable-tool-host/node_modules/.bin/axios-scaffold-kit init -y
 ```
 
-Keep the intended Node runtime on PATH for the executable's shebang. On Windows, use the corresponding `.cmd` launcher. This tests npm's installed bin mapping; it is distinct from successful `npm exec --package` verification. Normal maintainer tarball checks above use Node 22+ and do not require the old npm fallback. Do not claim the published-registry `npx` path was verified before actual publication.
+Keep the intended Node on PATH for the shebang; Windows uses the corresponding .cmd launcher. Do not describe installed-bin verification as successful npm exec or published-registry npx proof.
 
-Verify yes, refusal, blank input, Ctrl+C, EOF, noninteractive refusal, both consent flags, existing Axios preservation, conflict protection, and installation failure behavior. Check generated requests against a controlled local HTTP server. Real npm downloads may use the network; routine tests should not.
+## Step 5 — Create the GitHub tag and Release
 
-The first release does not need TypeScript, authentication, output selection, or a compiled build. Do not install extra tooling solely to create a release artifact.
-
-## 4. Authorize and record the final release commit
-
-Obtain explicit authorization for release mutations. Once the candidate is approved:
-
-1. Enable npm account two-factor authentication and confirm the account can publish under the selected name. Never commit npm tokens or credentials.
-2. Recheck name availability for the initial publication. A previously unregistered name is not reserved.
-3. Deliberately remove `private: true` (or set it to boolean false), finalize release notes/date, and review the exact diff.
-4. Create the release commit and push it only when authorized. Wait for its CI checks to pass.
-5. Confirm `git status --short` is clean and `package.json` has the intended version. Build the final archive again from this exact committed state and repeat the package checks. Record its filename and checksum from `npm pack --json`.
-
-Do not publish an earlier archive built before the final metadata/release commit. Keep the reviewed final archive for publication.
-
-## 5. Publish npm, then the matching GitHub Release
-
-These are examples for an explicitly authorized release; they are not part of ordinary feature development:
+After the exact commit/archive are verified and tagging is authorized:
 
 ```sh
-npm login
-npm publish ./axios-scaffold-kit-0.1.0.tgz --access public
-```
-
-Publish the verified archive. Direct interactive publication requires the account's applicable authentication, including 2FA. Follow the current [npm publication instructions](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/). Check the registry result before announcing success. If npm reports a network error, inspect the registry before retrying: the first attempt may already have succeeded.
-
-After confirming npm publication, create an annotated tag on the exact release commit and push that tag, when authorized:
-
-```sh
-git tag -a v0.1.0 -m "Release v0.1.0"
+git tag -a v0.1.0 -m "Release v0.1.0" HEAD
 git push origin v0.1.0
 ```
 
-On GitHub, open **Releases → Draft a new release**, select the existing `v0.1.0` tag, and paste the reviewed release notes. Check the tag points to the verified commit; do not create a tag on whatever happens to be the newest main commit.
+Confirm HEAD is still the recorded release commit before running that command. Do not move an existing published tag. On GitHub:
 
-If npm succeeded but tagging or the GitHub announcement failed, finish those remaining steps using the same released commit. Do not republish a different artifact under the same version.
+1. Open **Releases → Draft a new release**.
+2. Select the existing **v0.1.0** tag; verify its target commit.
+3. Title it **v0.1.0 — Initial JavaScript release**.
+4. Paste the reviewed contents of docs/releases/0.1.0.md, replacing drafting instructions with the real status/evidence.
+5. Because npm follows next, clearly state **Source release available; npm publication pending**. Do not claim npm commands have been verified yet.
+6. A 0.x version is not automatically a prerelease; do not select prerelease solely because it starts with zero.
+7. Publish the GitHub Release only when authorized. If you prefer to wait until npm succeeds, **Save draft** instead; finalize it afterward.
 
-## 6. Write useful release notes
+GitHub supplies source ZIP/tar archives for the tag. No manual ZIP, compiled binary, or node_modules upload is needed. Those source archives differ from npm's curated package archive. For this CLI, no manually uploaded assets are required. See [GitHub's release instructions](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository).
 
-Use this outline, omitting empty sections:
+## Step 6 — Publish the verified archive to npm
 
-```text
-Summary
-Added
-Fixed
-Breaking changes
-Supported platforms and known limitations
-Actions required for existing generated applications
-Installation / usage command
-```
-
-For the initial release, show `npx axios-scaffold-kit@0.1.0 init` and the consent flag option. For a future TypeScript release, explain the new selection/interface, tested compiler environment, and that existing JavaScript files are not converted automatically. Never describe a planned capability as shipped.
-
-GitHub's generated notes can help collect PRs and contributors, but review them and add practical user-facing behavior and migration guidance. Keep the changelog and release announcement consistent.
-
-## 7. Assets and post-publication checks
-
-GitHub automatically provides **Source code (.zip)** and **Source code (.tar.gz)** for the tag. They represent the tracked repository, including tests and public docs; the npm archive contains the curated package files. These are different artifacts. No manual ZIP or compiled binary upload is required for this CLI. Attaching the npm `.tgz` is optional, not part of the first-release process.
-
-See [GitHub's release documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
-
-After publication:
+Confirm authorization, the logged-in npm account, name availability/ownership, and the exact reviewed archive. Publish that archive rather than rebuilding from an unrelated working tree:
 
 ```sh
-npm view axios-scaffold-kit@0.1.0 version engines bin repository
-npx axios-scaffold-kit@0.1.0 --help
+npm whoami --registry=https://registry.npmjs.org
+npm publish ./axios-scaffold-kit-0.1.0.tgz --access public --registry=https://registry.npmjs.org
 ```
 
-Repeat generation in a fresh disposable application using the exact published version, verify the GitHub Release appears in the release list, and check the npm page's README/repository links. Record what actually passed. Then collect subsequent work under Unreleased and use a new version for the next release.
+Complete the required interactive authentication/2FA prompts yourself. Current requirements are in [npm's direct publishing documentation](https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages/). The registry publication is separate from GitHub.
 
-Publishing automation can be introduced later after the manual process is understood. This CI workflow never publishes npm packages or creates GitHub Releases.
+If publication reports an ambiguous network error, check the registry before retrying: the first attempt may have succeeded. If a source/tagged release needs code changes before npm succeeds, do not move its public tag; prepare another version with clear notes. Never republish different contents under a version already registered.
+
+## Step 7 — Verify the public installation and finish the announcement
+
+```sh
+npm view axios-scaffold-kit@0.1.0 version engines bin repository dist.integrity --registry=https://registry.npmjs.org
+npx --yes axios-scaffold-kit@0.1.0 --help
+```
+
+Compare the registry integrity with the saved archive metadata. In another fresh disposable application, run the exact published init command, verify all four files and request behavior, and check the npm README/repository/documentation links.
+
+Only after npm succeeds and these checks pass, remove the npm-pending sentence from GitHub release notes (or publish the saved GitHub draft) and announce both links. Check that the Release appears in the release list. Update any remaining source status text in a later reviewed documentation commit without moving the release tag.
+
+The published-registry npx command cannot be claimed tested during local preparation. Publishing does not automatically update previously generated applications.
+
+## Future versions and maintenance
+
+- Record future work under Unreleased. Bug fixes normally become 0.1.1; TypeScript is targeted for 0.2.0 with clear compatibility/migration notes.
+- While pre-1.0, explicitly describe incompatible changes. After 1.0, use standard semantic versioning: compatible fix = patch, compatible feature = minor, incompatible contract = major. See [SemVer](https://semver.org/).
+- Each release needs matching npm version, v-prefixed tag, GitHub Release, changelog, relevant tests, and manual-adoption notes for generated-code changes.
+- Use release-note sections for additions, fixes, breaking changes, limitations, and actions required by existing users. Omit empty sections rather than inventing changes.
+- Maintainers review contributions and control merges/releases. Public contributors do not receive npm publishing rights automatically.
+- New generator versions affect future output only. Maintain Axios in consuming applications through their normal dependency workflow.
+
+Automation can be added later. The current GitHub workflow has read-only permissions and does not publish npm packages or create releases.

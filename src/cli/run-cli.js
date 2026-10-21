@@ -18,7 +18,7 @@ Options:
 
 Asks before installing missing Axios; preserves existing declarations without prompting.
 Noninteractive installation requires -y or --yes. Only standalone npm installation is supported.
-Authentication is not configured by this command.`;
+Optional authentication hooks are generated but disabled until configured.`;
 
 /** Handle terminal arguments; keep project and filesystem work in their own modules. */
 export async function runCli(args, projectDirectory) {
@@ -77,6 +77,7 @@ export async function runCli(args, projectDirectory) {
   }
 
   console.log("Next: set your API base URL in apiClient.js and replace the example endpoints.");
+  console.log("Optional: edit auth/authConfig.js to enable your application's token, refresh, or CSRF hooks.");
   console.log("No requests were sent to your API by this command.");
   return 0;
 }

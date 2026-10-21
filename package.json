@@ -1,8 +1,7 @@
 {
   "name": "axios-scaffold-kit",
   "version": "0.1.0",
-  "private": true,
-  "description": "Generate an editable JavaScript Axios API starter with consent-controlled dependency installation.",
+  "description": "Generate an editable JavaScript Axios API starter with optional authentication hooks and consent-controlled Axios installation.",
   "type": "module",
   "bin": {
     "axios-scaffold-kit": "bin/axios-scaffold-kit.js"
@@ -11,7 +10,8 @@
     "node": ">=16"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:auth": "node scripts/run-auth-tests.js"
   },
   "license": "MIT",
   "repository": {
@@ -33,7 +33,8 @@
     "bin/",
     "src/",
     "templates/",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "docs/AUTHENTICATION.md"
   ],
   "publishConfig": {
     "access": "public"

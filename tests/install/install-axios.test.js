@@ -21,7 +21,7 @@ test("installs missing Axios before creating starter files", async (t) => {
   });
   const manifest = JSON.parse(await readFile(join(directory, "package.json"), "utf8"));
   assert.equal(manifest.dependencies.axios, AXIOS_VERSION_RANGE);
-  assert.deepEqual((await readdir(join(directory, "src/api"))).sort(), ["apiClient.js", "exampleApi.js"]);
+  assert.deepEqual((await readdir(join(directory, "src/api"))).sort(), ["apiClient.js", "auth", "exampleApi.js"]);
 });
 
 for (const field of ["dependencies", "devDependencies", "optionalDependencies"]) {

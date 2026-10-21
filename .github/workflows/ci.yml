@@ -26,6 +26,9 @@ jobs:
           package-manager-cache: false
       # The generator has no dependencies: npm ci would require a nonexistent lockfile.
       - run: npm test
+      - name: Prepare disposable Axios integration dependency
+        run: node scripts/prepare-auth-fixture.js
+      - run: npm run test:auth
       - run: npm pack --dry-run --ignore-scripts
 
   compatibility:
@@ -73,3 +76,9 @@ jobs:
         env:
           CLI_NODE_BINARY: ${{ steps.cli.outputs.binary }}
         run: npm test
+      - name: Prepare disposable Axios integration dependency
+        run: node scripts/prepare-auth-fixture.js
+      - name: Verify authentication and generated compatibility fixtures
+        env:
+          CLI_NODE_BINARY: ${{ steps.cli.outputs.binary }}
+        run: npm run test:auth

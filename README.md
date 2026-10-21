@@ -1,37 +1,44 @@
 # axios-scaffold-kit
 
-Generate an editable Axios API starter for your project.
+Generate an editable JavaScript Axios API starter in an existing project, with optional bearer authentication, token refresh, and CSRF hooks.
 
-> **Unpublished `0.1.0` candidate:** JavaScript generation and consent-controlled Axios installation work locally. TypeScript, authentication helpers, and output-directory selection are future features. Publication and the GitHub Release are separate, pending steps.
+> **Release status:** `0.1.0` is an unpublished candidate. The npm commands below become available after publication. For now, use [the local executable](#try-the-local-executable). Authentication is disabled by default.
 
-## Why this project?
+The generator copies source files into your application. You own and edit those files; your application imports local code and Axios, not a runtime library from axios-scaffold-kit. This independent project is not affiliated with or endorsed by Axios.
 
-Starting a project often means repeating the same API setup: creating an Axios client, choosing a folder structure, and writing example request functions. axios-scaffold-kit generates that starting point so you can connect your own endpoints.
+## Contents
 
-Generated files live in your application. Inspect, edit, and commit them like any other source code. The generator is not a runtime dependency of your application.
-
-This independent project is not affiliated with or endorsed by Axios.
+- [Requirements](#requirements)
+- [Installation and quick start](#installation-and-quick-start)
+- [Generated structure and where to edit](#generated-structure-and-where-to-edit)
+- [Make requests](#make-requests)
+- [Add your own API module](#add-your-own-api-module)
+- [Optional authentication](#optional-authentication)
+- [Try a real public API](#try-a-real-public-api)
+- [Installation behavior and file safety](#installation-behavior-and-file-safety)
+- [Troubleshooting](#troubleshooting)
+- [Development and verification](#development-and-verification)
+- [Updates, contributions, and releases](#updates-contributions-and-releases)
 
 ## Requirements
 
-- Node.js 16 or later to run the generator. Contributor tests require Node.js 22 or later; application developers running the CLI do not need that test runtime.
-- An existing project with a valid `package.json` in its root directory. Automatic installation currently supports standalone npm projects.
-- A project that supports JavaScript ES modules through its runtime or build tooling.
-- npm on `PATH` and registry access when Axios is missing. Existing Axios declarations are preserved without running npm.
+- Node.js **16 or later** to run the generator.
+- An existing project with a valid `package.json`; run the CLI from that project's root.
+- JavaScript ES-module support through your application runtime or build tooling.
+- npm on `PATH` and registry access when Axios needs installation. Automatic installation supports standalone npm projects.
 
-No dependencies or build step are needed to run this generator from source.
+Contributor tests require Node.js 22 or later; users running the generator do not need the contributor test runner. There is no generator build step or runtime dependency installation needed to run its source.
 
-## Try the local CLI
+## Installation and quick start
 
-Clone this repository and run the executable from the root of a disposable target project. Replace `/absolute/path/to` with your local clone's parent directory:
+**After npm publication**, run this inside the application where you want the generated files:
 
 ```sh
-cd /path/to/your-test-project
-node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js --help
-node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init
+cd /path/to/your-application
+npx axios-scaffold-kit@0.1.0 init
 ```
 
-When Axios is missing, the command asks before installing:
+If Axios is missing, setup asks:
 
 ```text
 Axios was not found in package.json.
@@ -39,165 +46,263 @@ Installing it may update package.json, the lockfile, and node_modules.
 Install Axios? (y/N)
 ```
 
-Enter `y` or `yes` to continue. Enter `n`, `no`, or press Enter to cancel without generating starter files or running npm. Other answers repeat the question. Closing input cancels; Ctrl+C cancels with exit status 130.
+Enter `y`/`yes` to continue. Enter `n`/`no`, press Enter, or close input to cancel without generating files or running npm. Invalid answers repeat the question; Ctrl+C cancels with exit status 130.
 
-For scripts, authorize installation explicitly:
+For unattended setup, explicitly authorize missing-Axios installation:
 
 ```sh
-node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init -y
-# Equivalent:
-node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init --yes
+npx axios-scaffold-kit@0.1.0 init -y
+# Equivalent: init --yes
 ```
 
-Missing Axios without an interactive terminal requires one of these flags. Neither flag bypasses project validation or output conflict checks. Existing Axios declarations skip both prompting and installation, including in scripts.
+npm may separately ask to download the generator itself. That is different from permission to install Axios in your application. Existing direct Axios declarations skip our prompt and installation.
 
-The command uses your **current directory** as the target project. It creates:
+If you prefer keeping the generator as a development tool, after publication use:
+
+```sh
+npm install --save-dev axios-scaffold-kit@0.1.0
+npx axios-scaffold-kit init
+```
+
+### Try the local executable
+
+Until publication, clone the repository and invoke its executable from a disposable target project's root:
+
+```sh
+cd /path/to/your-test-project
+node /absolute/path/to/axios-scaffold-kit/bin/axios-scaffold-kit.js init
+```
+
+Run `--help` for usage. No arguments also show help. Supported setup forms are `init`, `init -y`, and `init --yes`; unknown commands or extra arguments fail.
+
+### Configure the starter
+
+1. Set your real API base URL in `src/api/apiClient.js`; the generated URL is an example.
+2. Replace `API_PREFIX = "/examples"` in `src/api/exampleApi.js` with a real resource path, or add your own module as shown below.
+3. Call an API method from your application. Generating files alone does not send requests or test your backend.
+4. If needed, connect authentication in `src/api/auth/authConfig.js`. Otherwise leave it unchanged.
+
+## Generated structure and where to edit
 
 ```text
 src/api/
   apiClient.js
   exampleApi.js
+  auth/
+    authConfig.js
+    attachAuthInterceptors.js
 ```
 
-If either file exists, the command stops before running npm or writing either file. Templates are prepared first, then missing Axios is installed, then starter files are written. Exclusive file creation also prevents overwrites if a destination appears during installation.
+| File | Purpose | What you normally change |
+| --- | --- | --- |
+| `apiClient.js` | Creates the shared Axios instance with a 10-second timeout and connects optional auth. | Base URL, timeout, and ordinary Axios options such as cookie credentials when required. |
+| `exampleApi.js` | Editable request examples that return `response.data`. | Endpoint paths, request methods, parameters, bodies, and names matching your API. |
+| `auth/authConfig.js` | Supplies application-specific authentication hooks; defaults to empty options. | Access-token lookup, refresh endpoint/body/response parsing, token persistence, CSRF source, and failure handling. |
+| `auth/attachAuthInterceptors.js` | Implements token attachment, refresh coordination, retry limits, cancellation, origin checks, and cleanup. | Usually leave it alone; edit it when deliberately changing interceptor mechanics. Each function has a purpose comment. |
 
-When Axios is already declared in `dependencies`, `devDependencies`, or `optionalDependencies`, its version and location are preserved and npm is not run. Detection uses the manifest, not `node_modules`; a declaration does not prove dependencies have been downloaded. If needed, use your project's normal dependency-installation workflow.
+No login endpoint, token store, framework router, environment-variable convention, or business logic is generated. Set the base URL before enabling authentication, because its API origin is captured during setup.
 
-After consent, missing Axios is installed as a production dependency with `npm install axios@^1.20.0 --save-prod`. The range is maintained in `src/config/defaults.js`. npm may modify `package.json`, lockfiles, and installed dependencies, and follows the project's normal npm configuration and lifecycle behavior. Existing node_modules directories are used by npm, not deleted wholesale by this generator. Consent does not guarantee an unchanged dependency tree. The generator does not attempt to roll back npm changes.
+## Make requests
 
-If npm fails or is terminated, starter files are not generated. If npm succeeds but file writing later fails, the error explicitly reports that installation succeeded and describes any completed file writes. Partial output is not automatically rolled back.
-
-A peer-only Axios declaration stops the command with instructions to install it explicitly. Automatic installation is also refused when the target or an ancestor identifies Yarn/pnpm through `packageManager` or lock/workspace files, or declares npm workspaces. Install Axios with the intended package manager first; generation can then proceed without invoking npm once a direct declaration exists. Workspace-aware installation and other package managers are not implemented yet.
-
-No arguments or `--help` displays help. Supported setup forms are `init`, `init -y`, and `init --yes`. Unknown commands, duplicate flags, or extra arguments fail with a nonzero exit status. Output is JavaScript in `src/api`; there is no language/output selection or authentication setup in this release.
-
-**After generation:**
-
-1. Replace the example base URL in `src/api/apiClient.js` with your API's URL or your own configuration value.
-2. Replace `/examples` and the example methods in `src/api/exampleApi.js` to match your backend contract.
-
-Generating files does not contact your API or verify your endpoints.
-
-## Use the generated files
-
-The shared client is a named export, created with `axios.create`. It has a configurable base URL and a generated 10-second timeout, without authentication interceptors or cookie configuration.
-
-The example API is also a named export. The following application code assumes imports relative to `src/`; adapt the path to your caller:
+Import paths below assume the caller is directly inside `src/`; adjust them to the calling file. Relative imports must include `.js` when running directly with Node.
 
 ```js
 import { exampleApi } from "./api/exampleApi.js";
 
-const items = await exampleApi.getAll({ page: 1 });
-const item = await exampleApi.getById("example-id");
-const created = await exampleApi.create({ name: "Example" });
-await exampleApi.update("example-id", { name: "Updated example" });
-await exampleApi.patch("example-id", { name: "Renamed example" });
-await exampleApi.remove("example-id");
+async function loadItems() {
+  try {
+    const items = await exampleApi.getAll({ page: 1 });
+    console.log(items);
+  } catch (error) {
+    console.error("Request failed:", error.response?.status, error.message);
+  }
+}
+
+// Call from application startup, an event handler, or another appropriate entry point.
+await loadItems();
 ```
 
-These are editable examples, not assumptions about your API's routes or payloads. All methods return `response.data`, whose shape is determined by your server. Request errors reject normally; handle them in your application.
+### Example methods
 
-Each method accepts an optional Axios configuration object as its last argument. For instance, cancellation uses the normal `AbortController` signal:
+All example methods return the server's `response.data`; the body shape belongs to your backend. Request failures reject normally. `config` is an optional Axios request configuration object.
 
-```js
-const controller = new AbortController();
-const request = exampleApi.getAll({ page: 1 }, { signal: controller.signal });
+| Method | HTTP request | Arguments |
+| --- | --- | --- |
+| `getAll(params = {}, config = {})` | GET resource collection | Query parameters, then request options. |
+| `getById(id, config = {})` | GET resource by encoded ID | Resource ID, then request options. |
+| `create(body, config = {})` | POST resource collection | Request body, then request options. |
+| `update(id, body, config = {})` | PUT resource by ID | ID, replacement body, then request options. |
+| `patch(id, body, config = {})` | PATCH resource by ID | ID, partial body, then request options. |
+| `remove(id, config = {})` | DELETE resource by ID | ID, then request options. |
 
-// Cancel when the request is no longer needed; handle the rejection in your caller.
-controller.abort();
-await request.catch((error) => {
-  console.log(error.message);
-});
-```
+`getAll` takes query parameters from its first argument; that argument takes precedence over `config.params`. Other methods forward the request configuration directly.
 
-`getAll(params, config)` uses its first argument as query parameters. The other methods forward the configuration directly to Axios. Use the shared client when you need the full Axios response, including status and headers:
+Use the client when you need the full response, including status and headers:
 
 ```js
 import { apiClient } from "./api/apiClient.js";
 
 const response = await apiClient.get("/your-endpoint");
-console.log(response.status, response.data);
+console.log(response.status, response.headers, response.data);
 ```
 
-The generated code uses no framework-specific environment variables, router, or state library.
+Cancellation uses normal Axios configuration:
 
-## How the generator works
-
-```text
-bin/axios-scaffold-kit.js    Starts the CLI and handles failure exit status
-src/cli/                    Handles commands and terminal messages
-src/project/                Reads the manifest and checks dependency/install boundaries
-src/config/                 Owns shared generation defaults
-src/install/                Starts npm and waits for installation success or failure
-src/generate/               Prepares templates, checks conflicts, then writes files
-templates/javascript/       Editable source templates
-tests/cli/                  Tests the executable against temporary projects
-tests/install/              Tests dependency handling and installation failures
-tests/helpers/              Provides isolated projects and an offline fake npm
+```js
+const controller = new AbortController();
+const request = exampleApi.getAll({}, { signal: controller.signal });
+controller.abort();
+await request.catch((error) => console.log(error.message));
 ```
 
-The npm `bin` entry maps the command name to the executable. The executable delegates to the CLI, which reads and validates the project once, prepares output, preserves Axios or requests consent to install it, and writes the starter after dependency handling succeeds. Template locations are resolved relative to the generator itself, so execution does not depend on being inside this repository.
+## Add your own API module
 
-The timeout is inserted from `src/config/defaults.js`. Exclusive file creation prevents overwriting files that appear between preflight checks and writing.
+Create another file beside `exampleApi.js`, for example `src/api/usersApi.js`:
+
+```js
+import { apiClient } from "./apiClient.js";
+
+export const usersApi = {
+  getProfile: async (userId, config = {}) => {
+    const response = await apiClient.get(
+      `/users/${encodeURIComponent(userId)}`,
+      config,
+    );
+    return response.data;
+  },
+
+  createUser: async (body, config = {}) => {
+    const response = await apiClient.post("/users", body, config);
+    return response.data;
+  },
+};
+```
+
+Replace these routes and payloads to match your backend. Import the same shared client into each resource module so enabled interceptors apply consistently. You may rename or delete the example module once your own modules are in place.
+
+## Optional authentication
+
+The client automatically calls `attachAuthInterceptors(apiClient, createAuthConfig(apiClient))`. Default empty options enable **no authentication interceptors, browser storage reads, or backend calls**.
+
+Edit **`auth/authConfig.js`** to enable only the hooks your backend supports. Its comments show where to add your own code. Complete copyable examples and the internal helper reference are in [the authentication guide](docs/AUTHENTICATION.md).
+
+| Function or option | Responsibility |
+| --- | --- |
+| `createAuthConfig(apiClient)` | Return application options using the existing client; do not import the client back into this file. |
+| `getAccessToken()` | Return the current access token or `null`, synchronously or asynchronously. |
+| `refreshAccessToken()` | Perform your backend refresh, persist the new token in your application, and return it. Requires token lookup. |
+| `onRefreshFailure(error)` | Optionally clear application session state or notify the application when refresh fails. |
+| `csrf.getToken(config)` | Obtain the request's CSRF token or `null`, synchronously or asynchronously; independent of bearer auth. |
+| `csrf.headerName` | Expected CSRF header name; defaults to `X-XSRF-TOKEN`. |
+| `attachAuthInterceptors(client, options)` | Register enabled request/response handlers and return cleanup. Advanced manual setup remains available. |
+| `cleanupAuth()` | Remove the initial setup's interceptors before replacement; harmless with default empty options. |
+
+Example browser-only bearer configuration, replacing `authConfig.js`:
+
+```js
+export function createAuthConfig(apiClient) {
+  return {
+    getAccessToken: () => sessionStorage.getItem("accessToken"),
+  };
+}
+```
+
+Login, refresh, and logout must use the same storage and key. This illustrates integration; it is not a recommendation to store tokens in browser storage. Both sessionStorage and localStorage are readable by JavaScript. Use your application's storage/security policy or existing token-store functions. No token store is generated.
+
+```js
+await apiClient.post("/your-login-endpoint", credentials, { skipAuth: true });
+await apiClient.post("/without-generated-csrf", body, { skipCsrf: true });
+```
+
+These examples assume your application imports `apiClient` and supplies its own data. `skipAuth` bypasses generated bearer/refresh; `skipCsrf` independently bypasses generated CSRF. Neither suppresses cookies, removes explicit caller headers, or changes backend authorization.
+
+Refresh uses one shared in-flight operation and retries each eligible request at most once. The guide explains failure handling, replayable-body requirements, separate refresh clients, and fixed-origin credential filtering. Cookie transport and server-side CSRF protection must be configured for your backend. Optional auth uses Axios's public AxiosHeaders API; Axios 1.20.0 was verified. Versions lacking that API fail clearly when enabling hooks; existing declarations are not upgraded.
+
+Do not enable generated auth and also register another active manual setup on the same client. For runtime origin/options changes, call the appropriate cleanup, update the base URL, configure again, and retain the new cleanup. Source edits normally take effect after restart/reload.
+
+## Try a real public API
+
+In a disposable generated project, use [JSONPlaceholder](https://jsonplaceholder.typicode.com/):
+
+1. In `apiClient.js`, set `baseURL: "https://jsonplaceholder.typicode.com"`.
+2. In `exampleApi.js`, set `API_PREFIX = "/posts"`.
+3. Leave authentication empty. This public API does not test token refresh or CSRF.
+4. Create `src/api/testApi.js`:
+
+```js
+import { exampleApi } from "./exampleApi.js";
+
+async function testApi() {
+  try {
+    console.log("One post:", await exampleApi.getById(1));
+    console.log("Filtered:", await exampleApi.getAll({ userId: 1 }));
+  } catch (error) {
+    console.error("Request failed:", error.response?.status, error.message);
+    process.exitCode = 1;
+  }
+}
+
+await testApi();
+```
+
+For direct Node execution, the disposable project's package.json needs `"type": "module"`. From its root run `node src/api/testApi.js`; results appear in Terminal. In an existing frontend, call the same request functions from your application flow instead. JSONPlaceholder simulates writes; create/update/delete responses do not represent permanent changes.
+
+## Installation behavior and file safety
+
+- All output destinations and parent directories are checked before consent or installation. Existing generated destinations stop setup; symlink/non-directory output parents are rejected.
+- Existing Axios declarations in dependencies, devDependencies, or optionalDependencies are preserved without npm. Detection uses package.json, not node_modules; install your existing dependencies through your normal project workflow if needed.
+- Missing Axios is installed after consent as a production dependency using `npm install axios@^1.20.0 --save-prod`. The authoritative range is in `src/config/defaults.js`.
+- npm may change package.json, lockfiles, and installed dependencies, following the project's normal npm configuration/lifecycle behavior. The generator does not delete node_modules wholesale or guarantee an unchanged dependency tree after installation.
+- Peer-only Axios declarations require explicit installation. Automatic installation is refused for identified Yarn/pnpm projects or npm workspaces, including enclosing workspaces. Install Axios using the correct workflow first, then rerun generation with a direct declaration.
+- Files are written exclusively after successful dependency handling. npm failure prevents generation. Later write failure reports completed writes and successful installation honestly; neither npm changes nor partial output are automatically rolled back.
+- Noninteractive missing-Axios setup requires `-y`/`--yes`. Existing Axios permits noninteractive generation without consent flags.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Nothing prints after running a test file | Defining a function does not run it; call it, for example `await testApi()`, and print/handle its result. |
+| `ERR_MODULE_NOT_FOUND` for a relative import | Include `.js` and resolve the path relative to the calling file. Beside exampleApi.js, import `./exampleApi.js`. |
+| Import/module syntax errors in direct Node tests | Use a project configured for ES modules. In a disposable npm test project, `npm pkg set type=module` enables that mode; existing applications should follow their runtime/build configuration. |
+| HTTP `404` | Replace the example base URL and `/examples` prefix; check the combined URL and actual backend route. |
+| HTTP `401`/`403` | Check the backend's authentication/authorization contract. Empty authConfig supplies no credentials; `403` does not trigger refresh. |
+| Duplicate authentication configuration | Choose generated configuration or manual setup; clean up the active setup before replacing it. |
+| Browser reports CORS/cookie errors | Configure the backend's allowed origin/credentials/cookies; client-side scaffolding cannot fix server policy. |
+| Existing destination conflict | Review and integrate changes manually or generate in a fresh project. There is no overwrite/upgrade flag. |
+| Missing Axios without terminal input | Rerun interactively or explicitly authorize installation with `init -y`. |
 
 ## Development and verification
 
-Use Node.js 22 or later and run from this repository:
+Use Node.js 22+ in the generator repository. `npm test` is offline; without an Axios fixture it explicitly skips the real-Axios suite, so that alone is not full authentication verification.
 
 ```sh
+node scripts/prepare-auth-fixture.js
+# Set the temporary path printed by the script:
+export AXIOS_TEST_DIRECTORY="/absolute/path/printed/by/the/script"
 npm test
-npm pack --dry-run
+npm pack --dry-run --ignore-scripts
 ```
 
-Tests use Node's built-in test runner and disposable projects. They cover generation, output syntax, manifest validation, consent parsing/cancellation, noninteractive behavior, conflict protection before npm runs, preserved declarations and lockfiles, package-manager/workspace boundaries, help, invalid arguments, and installation/file-writing failures. Routine tests put a fake npm executable on `PATH`; they do not download packages or contact live APIs. The installer's fixed Windows command is checked through a process seam; actual Windows execution has not been verified locally.
+Preparation installs Axios in a disposable project using the shared range; it may access npm. The tests then use fake npm, controlled Axios adapters, and local HTTP servers rather than live backends. `npm run test:auth` runs just the integration suite and requires the fixture path. No repository dependencies or build/lint tools are installed.
 
-By default, CLI subprocesses and generated-file syntax checks use the same Node binary as the test runner. To check an older CLI runtime, keep Node 22 or later active for `npm test` and supply the absolute path to the other binary:
+Keep the test runner on Node 22+ and select a consumer runtime with `CLI_NODE_BINARY="/absolute/path/to/node" npm test`. Generated syntax, default-import, recipe, and HTTP child fixtures use that selected executable. The generator itself supports Node 16+.
 
-```sh
-CLI_NODE_BINARY="/absolute/path/to/node16/bin/node" npm test
-```
+Local verification on macOS ARM64 used Node 22.23.1 as runner with selected runtimes 16.0.0, 16.20.2, 20.20.2, 22.23.1, and 24.3.0. The expanded candidate passed 84 checks with Axios 1.20.0 and no skips; following the naming-only change, 84 checks were repeated with Node 16.0.0 and Node 22.23.1 selected. This records particular tested versions, not all future Node/Axios releases or transitive dependency resolutions.
 
-`CLI_NODE_BINARY` is a test-only setting. It does not switch your default runtime or change the generated code. Node 22 runs the testing tools, while those tools launch the CLI and syntax checks using the selected binary.
+Packed installation and real HTTP checks previously verified all example methods and response preservation on Node 16.0.0/npm 7.10.0 and Node 16.20.2/npm 8.19.4. Current packed executable/authentication checks verified Node 16.0.0's installed-bin mapping and local-tarball npm exec on Node 16.20.2/npm 8.19.4 and Node 22.23.1/npm 10.9.8. The old npm 7 local-tarball npm exec failure and fallback are documented in [the release guide](docs/RELEASING.md). Published-registry npx checks remain pending publication.
 
-The behavioral suite has been verified with a Node 22.23.1 test runner and these CLI runtimes on macOS ARM64:
+For actual browser verification with the same fixture, run `node scripts/serve-auth-browser-fixture.js`, open its localhost URL, and check for PASS; Ctrl+C stops it. The macOS in-app browser passed disabled defaults, automatic refresh/persistence, public bypass, CSRF precedence, origin filtering, and cleanup. This is separate evidence from Node environment fixtures; other browser engines remain unverified.
 
-| CLI runtime | Behavioral suite |
-| --- | --- |
-| Node 16.0.0 | Passed |
-| Node 16.20.2 | Passed |
-| Node 20.20.2 | Passed |
-| Node 22.23.1 | Passed |
-| Node 24.3.0 | Passed |
+The read-only [CI workflow](.github/workflows/ci.yml) configures Node 22 tests on Linux/macOS/Windows plus minimum/latest-patch Node 16 CLI checks on Linux and real Axios integration checks. Remote results are established only after those jobs pass. No workflow publishes npm packages or GitHub Releases.
 
-The declared range is `>=16`; the table records the versions actually checked, not every release in that range. Separate smoke checks used the packed archive to install Axios 1.20.0 in disposable projects on Node 16.0.0/npm 7.10.0 and Node 16.20.2/npm 8.19.4, with strict dependency-engine checking enabled. Both runtimes successfully executed all six generated example methods against a local HTTP server, including parameter/body/configuration forwarding and preservation of the full client response. Regeneration with an existing dependency also preserved the manifest and lockfile without npm on `PATH`. These checks do not establish compatibility of future Axios releases or transitive dependencies.
+## Updates, contributions, and releases
 
-Real-terminal checks on Node 16.0.0 also cover yes, no, EOF, and Ctrl+C, with fake npm for consent testing. Packaging checks are separate from the offline suite. No lint or build commands are configured. Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md).
+Generated files are application-owned: new generator versions do not update them automatically. Compare templates/release notes and apply relevant changes manually. Maintain Axios through your application's dependency workflow.
 
-The current candidate's actual npm executable mapping was also checked offline from a packed archive: npm exec with Node 16.20.2/npm 8.19.4 and Node 22.23.1/npm 10.9.8, and an npm-installed bin launcher with Node 16.0.0/npm 7.10.0. Both consent flags, existing-dependency preservation, help, and refusal without inner consent passed. npm 7.10.0 failed the direct local-tarball npm exec path before starting our CLI; the release guide records its fallback. The published-registry npx command still requires verification after publication.
+`0.1.0` includes JavaScript ES modules, fixed src/api output, optional authentication hooks, and standalone npm installation. TypeScript is targeted for 0.2.0. Output customization, workspace-aware installation, proactive refresh, and cross-tab coordination remain future work.
 
-## First-release scope and future work
-
-`0.1.0` is a JavaScript-only starter with fixed `src/api` output, preserved Axios declarations, consent-controlled installation, conflict protection, and Node 16+ CLI support. It uses ES modules; it is not a CommonJS template or a framework-specific integration.
-
-TypeScript is targeted for a future `0.2.0`. Authentication helpers, output selection, and workspace-aware installation are separate future features. They are not required to use this release.
-
-Once published, the intended commands are:
-
-```sh
-npx axios-scaffold-kit@0.1.0 init
-npx axios-scaffold-kit@0.1.0 init -y
-```
-
-These registry commands are **not available from this project yet**. Use the local executable until publication is confirmed. npm may first ask to download the generator; our separate installation question concerns Axios in your application.
-
-## Updates and release status
-
-New generator releases affect future output. They do not automatically change files already generated in your application. Apply relevant template fixes manually using future release notes; maintain Axios through your application's dependency workflow.
-
-The candidate version is `0.1.0`. `private: true` deliberately blocks publication until the final release decision; it does not make this GitHub repository private. See [CHANGELOG.md](CHANGELOG.md) for draft changes and [the maintainer release guide](docs/RELEASING.md) for the reviewed npm/tag/GitHub Release process. No release is claimed by the existence of these files.
-
-The read-only [CI workflow](.github/workflows/ci.yml) is configured to run tests on Node 22 across Linux, macOS, and Windows, and CLI checks on the declared minimum Node major's first and latest patch releases on Linux. Remote CI results are only established after those jobs run; local verification above does not establish all configured platforms. No automatic publishing or release-creation workflow is configured.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [CHANGELOG.md](CHANGELOG.md) for draft changes, and [docs/RELEASING.md](docs/RELEASING.md) for the manual GitHub/npm release process. The [draft release notes](docs/releases/0.1.0.md) are not a publication announcement. `private: true` blocks npm publication until final authorization; it does not make the repository private.
 
 ## License
 
-Licensed under the [MIT License](LICENSE), including source templates. Preserve applicable copyright and license notices when redistributing covered code.
+[MIT](LICENSE), including source templates. Preserve applicable copyright/license notices when redistributing covered code.
