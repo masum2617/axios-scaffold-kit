@@ -4,9 +4,24 @@ User-visible changes are recorded here. Released entries use the npm version, a 
 
 ## Unreleased
 
-Future changes will be collected here before a release is prepared. TypeScript support is targeted for a later `0.2.0`; output-directory selection remains future work.
+TypeScript support is targeted for a later `0.2.0`; output-directory selection remains future work.
 
-## 0.1.0 — prepared; publication pending
+## 0.1.1 — prepared; publication pending
+
+### Fixed
+
+- Missing package.json now shows explicit `npm init -y` and rerun instructions without installing Axios or generating files.
+- Existing-project users are directed to the folder containing their package.json; other manifest read/JSON errors remain distinct.
+
+### Documentation
+
+- Added quick-start instructions for empty folders, removed obsolete publication-pending wording for 0.1.0, and shortened contributor verification guidance.
+
+### Existing users
+
+No generated-code changes or application migration is required. Use the new CLI version after publication to receive the improved terminal guidance.
+
+## 0.1.0 — 2026-10-21
 
 ### Added
 
@@ -41,6 +56,6 @@ Future changes will be collected here before a release is prepared. TypeScript s
 
 ### Existing users
 
-This is the initial release; publication is pending. Future generator updates will not rewrite files already generated in an application. Relevant fixes will include manual update guidance.
+This is the initial published release. Future generator updates will not rewrite files already generated in an application. Relevant fixes will include manual update guidance.
 
 Before adopting this version from earlier local output, compare the four templates. Manually add `auth/authConfig.js` and update the shared client wiring; retain `auth/attachAuthInterceptors.js` or add it if missing. The CLI refuses to overwrite existing starter files; enabling authentication is explicit.

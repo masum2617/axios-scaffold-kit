@@ -50,12 +50,30 @@ test("an existing authConfig.js stops setup before consent, npm, or other file w
   await assert.rejects(readFile(join(directory, "../npm-call.json")), { code: "ENOENT" });
 });
 
-test("requires a readable package.json in the current directory", async (t) => {
+for (const args of [["init"], ["init", "-y"], ["init", "--yes"]]) {
+  test(`guides project initialization without changes when package.json is missing: ${args.join(" ")}`, async (t) => {
+    const directory = await createProject(t, null);
+    await writeFile(join(directory, "notes.txt"), "keep this");
+    const result = runCli(directory, args);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /No package\.json found/);
+    assert.match(result.stderr, /existing project/);
+    assert.match(result.stderr, /npm init -y\s+Then run:\s+npx axios-scaffold-kit init/);
+    assert.doesNotMatch(result.stdout, /Install Axios|Installing Axios/);
+    assert.deepEqual(await readdir(directory), ["notes.txt"]);
+    assert.equal(await readFile(join(directory, "notes.txt"), "utf8"), "keep this");
+    await assert.rejects(readFile(join(directory, "../npm-call.json")), { code: "ENOENT" });
+  });
+}
+
+test("does not suggest creating a manifest when package.json exists but cannot be read as a file", async (t) => {
   const directory = await createProject(t, null);
+  await mkdir(join(directory, "package.json"));
   const result = runCli(directory);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Cannot read .*package\.json/);
-  assert.deepEqual(await readdir(directory), []);
+  assert.doesNotMatch(result.stderr, /npm init -y/);
+  assert.deepEqual(await readdir(directory), ["package.json"]);
 });
 
 for (const manifest of ["{invalid", "null", "[]", '"string"']) {

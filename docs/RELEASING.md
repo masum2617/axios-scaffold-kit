@@ -185,6 +185,17 @@ Only after npm succeeds and these checks pass, remove the npm-pending sentence f
 
 The published-registry npx command cannot be claimed tested during local preparation. Publishing does not automatically update previously generated applications.
 
+## Patch releases after 0.1.0
+
+For `0.1.1`, keep the same sequence: verify changes → update the version without a tag → finalize notes → commit/push → require green CI → pack/test the clean commit → create the matching tag/GitHub Release → publish the verified archive → check registry integrity and command execution.
+
+- The maintainer has updated package.json to `0.1.1` using `npm version patch --no-git-tag-version`; do not increment it again for this patch.
+- Review [the 0.1.1 notes](releases/0.1.1.md) and CHANGELOG. Keep pending status until each actual release action succeeds.
+- Use `axios-scaffold-kit-0.1.1.tgz`, tag `v0.1.1`, and a matching GitHub Release. Do not replace the 0.1.0 tag or archive.
+- The current suite has 87 checks. The 84-check count earlier in this guide records initial-release verification.
+- If publishing creates a staged entry rather than a live version, inspect it using `npm stage list axios-scaffold-kit` or npm's Staged Packages tab, then approve the intended version through the authenticated 2FA flow. Do not upload again solely because the general listing still shows a temporary placeholder; first inspect version visibility and staging status.
+- Verify `0.1.1` from outside this source repository using a fresh disposable project/cache. Update the GitHub Release's pending status only after that version is available and checked.
+
 ## Future versions and maintenance
 
 - Record future work under Unreleased. Bug fixes normally become 0.1.1; TypeScript is targeted for 0.2.0 with clear compatibility/migration notes.

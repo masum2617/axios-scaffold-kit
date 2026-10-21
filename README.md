@@ -2,7 +2,7 @@
 
 Generate an editable JavaScript Axios API starter in an existing project, with optional bearer authentication, token refresh, and CSRF hooks.
 
-> **Release status:** `0.1.0` is prepared for release; GitHub tagging and npm publication are pending. The npm commands below become available after publication. Until then, use [the local executable](#try-the-local-executable). Authentication is disabled by default.
+> **Available on npm:** [axios-scaffold-kit@0.1.0](https://www.npmjs.com/package/axios-scaffold-kit/v/0.1.0). Authentication is disabled by default.
 
 The generator copies source files into your application. You own and edit those files; your application imports local code and Axios, not a runtime library from axios-scaffold-kit. This independent project is not affiliated with or endorsed by Axios.
 
@@ -31,12 +31,24 @@ Contributor tests require Node.js 22 or later; users running the generator do no
 
 ## Installation and quick start
 
-**After npm publication**, run this inside the application where you want the generated files:
+For an existing project, run this from its root folder, where `package.json` is located:
 
 ```sh
 cd /path/to/your-application
-npx axios-scaffold-kit@0.1.0 init
+npx axios-scaffold-kit init
 ```
+
+For a new or empty folder without `package.json`, initialize the project first:
+
+```sh
+cd /path/to/your-new-project
+npm init -y
+npx axios-scaffold-kit init
+```
+
+If `package.json` is missing, the CLI prints these steps and stops without installing Axios or generating files. It does not run `npm init` for you, even with `-y`/`--yes`.
+
+`npm install` alone installs the generator; `init` is the command that creates the starter files.
 
 If Axios is missing, setup asks:
 
@@ -51,22 +63,22 @@ Enter `y`/`yes` to continue. Enter `n`/`no`, press Enter, or close input to canc
 For unattended setup, explicitly authorize missing-Axios installation:
 
 ```sh
-npx axios-scaffold-kit@0.1.0 init -y
+npx axios-scaffold-kit init -y
 # Equivalent: init --yes
 ```
 
 npm may separately ask to download the generator itself. That is different from permission to install Axios in your application. Existing direct Axios declarations skip our prompt and installation.
 
-If you prefer keeping the generator as a development tool, after publication use:
+If you prefer keeping the generator as a development tool, use:
 
 ```sh
-npm install --save-dev axios-scaffold-kit@0.1.0
+npm install --save-dev axios-scaffold-kit
 npx axios-scaffold-kit init
 ```
 
 ### Try the local executable
 
-Until publication, clone the repository and invoke its executable from a disposable target project's root:
+To try the source checkout, clone the repository and invoke its executable from a disposable target project's root containing a package.json:
 
 ```sh
 cd /path/to/your-test-project
@@ -261,6 +273,7 @@ For direct Node execution, the disposable project's package.json needs `"type": 
 
 | Symptom | Check |
 | --- | --- |
+| No package.json found | For an existing project, use the folder containing package.json. For a new project, run `npm init -y`, then `npx axios-scaffold-kit init`. |
 | Nothing prints after running a test file | Defining a function does not run it; call it, for example `await testApi()`, and print/handle its result. |
 | `ERR_MODULE_NOT_FOUND` for a relative import | Include `.js` and resolve the path relative to the calling file. Beside exampleApi.js, import `./exampleApi.js`. |
 | Import/module syntax errors in direct Node tests | Use a project configured for ES modules. In a disposable npm test project, `npm pkg set type=module` enables that mode; existing applications should follow their runtime/build configuration. |
@@ -287,11 +300,9 @@ Preparation installs Axios in a disposable project using the shared range; it ma
 
 Keep the test runner on Node 22+ and select a consumer runtime with `CLI_NODE_BINARY="/absolute/path/to/node" npm test`. Generated syntax, default-import, recipe, and HTTP child fixtures use that selected executable. The generator itself supports Node 16+.
 
-Local verification on macOS ARM64 used Node 22.23.1 as runner with selected runtimes 16.0.0, 16.20.2, 20.20.2, 22.23.1, and 24.3.0. The expanded candidate passed 84 checks with Axios 1.20.0 and no skips; following the naming-only change, 84 checks were repeated with Node 16.0.0 and Node 22.23.1 selected. This records particular tested versions, not all future Node/Axios releases or transitive dependency resolutions.
+Verification uses disposable projects, controlled HTTP servers, and real Axios fixtures. Node 16.0.0 and Axios 1.20.0 have been exercised; this does not guarantee compatibility with every future runtime or dependency resolution. See [the release guide](docs/RELEASING.md) for package checks and the older npm local-tarball fallback.
 
-Packed installation and real HTTP checks previously verified all example methods and response preservation on Node 16.0.0/npm 7.10.0 and Node 16.20.2/npm 8.19.4. Current packed executable/authentication checks verified Node 16.0.0's installed-bin mapping and local-tarball npm exec on Node 16.20.2/npm 8.19.4 and Node 22.23.1/npm 10.9.8. The old npm 7 local-tarball npm exec failure and fallback are documented in [the release guide](docs/RELEASING.md). Published-registry npx checks remain pending publication.
-
-For actual browser verification with the same fixture, run `node scripts/serve-auth-browser-fixture.js`, open its localhost URL, and check for PASS; Ctrl+C stops it. The macOS in-app browser passed disabled defaults, automatic refresh/persistence, public bypass, CSRF precedence, origin filtering, and cleanup. This is separate evidence from Node environment fixtures; other browser engines remain unverified.
+For browser verification, run `node scripts/serve-auth-browser-fixture.js` with the same fixture, open its localhost URL, and check for PASS; Ctrl+C stops it. Browser checks are separate from the Node test suite.
 
 The read-only [CI workflow](.github/workflows/ci.yml) configures Node 22 tests on Linux/macOS/Windows plus minimum/latest-patch Node 16 CLI checks on Linux and real Axios integration checks. Remote results are established only after those jobs pass. No workflow publishes npm packages or GitHub Releases.
 
@@ -301,7 +312,7 @@ Generated files are application-owned: new generator versions do not update them
 
 `0.1.0` includes JavaScript ES modules, fixed src/api output, optional authentication hooks, and standalone npm installation. TypeScript is targeted for 0.2.0. Output customization, workspace-aware installation, proactive refresh, and cross-tab coordination remain future work.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [CHANGELOG.md](CHANGELOG.md) for version history, and [docs/RELEASING.md](docs/RELEASING.md) for the manual GitHub/npm release process. The [release notes](docs/releases/0.1.0.md) describe the initial version and its publication status. The package publication block has been removed for release preparation; publishing remains a separate, explicit maintainer action.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issues and pull requests, [CHANGELOG.md](CHANGELOG.md) for version history, and [docs/RELEASING.md](docs/RELEASING.md) for the manual GitHub/npm release process. The [release notes](docs/releases/0.1.0.md) describe the initial version and its publication status. Version `0.1.0` is published; [patch `0.1.1`](docs/releases/0.1.1.md) is prepared and awaiting publication. Future CLI fixes require a new npm version; updating the GitHub README alone does not update the published package.
 
 ## License
 

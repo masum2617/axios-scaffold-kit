@@ -1,6 +1,6 @@
 {
   "name": "axios-scaffold-kit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate an editable JavaScript Axios API starter with optional authentication hooks and consent-controlled Axios installation.",
   "type": "module",
   "bin": {
